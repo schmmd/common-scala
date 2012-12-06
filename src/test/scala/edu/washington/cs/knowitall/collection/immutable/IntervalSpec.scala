@@ -4,13 +4,29 @@ import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 
+import org.specs2._
+import org.scalacheck._
+
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
 @RunWith(classOf[JUnitRunner])
-object IntervalSpecTest extends Specification {
+object IntervalSpecTest extends Specification with ScalaCheck {
+  implicit def arbInterval: Arbitrary[Interval] = Arbitrary {
+    for {
+      a <- Gen.choose(0, 20)
+      b <- Gen.choose(0, 20) suchThat (_ >= a)
+    } yield Interval.open(a, b)
+  }
+
+  "intersection is smaller" ! check { (a: Interval, b: Interval) => (a intersect b).size <= math.min(a.size, b.size) }
+  "intersection is contained by both" ! check { (a: Interval, b: Interval) => (a intersect b).forall(x => (a contains x) && (b contains x)) }
+
+  "union is larger" ! check { (a: Interval, b: Interval) => !(a intersects b) || (a union b).size >= math.min(a.size, b.size) }
+  "union is contained by one" ! check { (a: Interval, b: Interval) => !(a intersects b) || (a union b).forall(x => (a contains x) || (b contains x)) }
+
   "intervals" should {
     "border each other" in {
       (Interval.open(0, 4) borders Interval.open(4, 8)) must beTrue

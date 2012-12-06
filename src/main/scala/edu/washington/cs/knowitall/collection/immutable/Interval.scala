@@ -223,6 +223,7 @@ object Interval {
   /** Create an open interval that includes all points between the two intervals. */
   def between(x: Interval, y: Interval): Interval = {
     require(!(x intersects y), "intervals may not intersect")
+    require(!x.isEmpty && !y.isEmpty, "intervals may not be empty")
     Interval.open(x.end min y.end, x.start max y.start)
   }
 
